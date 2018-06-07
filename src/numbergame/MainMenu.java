@@ -21,17 +21,18 @@ public class MainMenu extends JPanel {
         p.setLayout(new FlowLayout());
         
         
-        JButton eightByEight = new JButton("8x8");
+        JButton eightByEight = new JButton("start at 3x3");
         
         
         eightByEight.addActionListener(new ActionListener(){
             public void actionPerformed(ActionEvent e)
             {
-              NumberGame m = new NumberGame(8,8);
+              f.dispose();
+              NumberGame m = new NumberGame(3,3);
             }
         });
         p.add(eightByEight);
-        f.setSize(200, 200);
+        f.setSize(200, 100);
         f.setTitle("Number Game");
         f.setLocationRelativeTo(null);
         f.add(p);

@@ -5,6 +5,7 @@ import java.awt.Graphics;
 import java.util.*;
 import java.awt.event.*;
 import javax.swing.*;
+import javax.swing.Timer;
 
 /**
  *
@@ -15,60 +16,92 @@ public class NumberGame extends JPanel implements MouseListener {
     private int width;
     private int height;
     private GameBoard game_board;
-    private int tile_outline_thickness = 2;
-    private ArrayList<Tiles> selected_tiles = new ArrayList<Tiles>();
+    private ArrayList<Tiles> selected_tiles;
+    private int numOfValidTiles;
+    JFrame f = new JFrame();
+    private Timer timer;
+    private GameTimer gameTime;
 
     public NumberGame(int width, int height) {
+        this(width, height, 0);
+    }
+
+    public NumberGame(int width, int height, int time) {
         this.width = width;
         this.height = height;
         game_board = new GameBoard(width, height);
         addMouseListener(this);
         setUpBoard();
+        numOfValidTiles = width * height;
+        selected_tiles = new ArrayList<Tiles>();
+        gameTime = new GameTimer(time);
+        checkTime();
+
+    }
+
+    public void checkTime() {
+        ActionListener timeListener = new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                if (!gameTime.lost()) {
+                    gameTime.removeTime();
+                    repaint();
+                } else {
+                    timer.stop();
+                    f.dispose();
+                    new MainMenu();
+                }
+            }
+        };
+        timer = new Timer(1000, timeListener);
+        timer.setInitialDelay(0);
+        timer.start();
     }
 
     public void setUpBoard() {
-        JFrame f = new JFrame();
         f.add(this);
         f.setSize(game_board.getWidth() + 15, game_board.getHeight() + 40);
         f.setTitle("Number Game");
         f.setLocationRelativeTo(null);
+        f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         f.setVisible(true);
-        f.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
     }
 
     @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
-        g.setColor(Color.white);
-        g.fillRect(0, 0, game_board.getWidth(), game_board.getHeight());
+        g.setColor(Color.BLACK);
+        g.drawString(width +"X"+height, game_board.getWidth() / 2 - 15, 25);
+        g.drawString(gameTime.timeString(), game_board.getWidth() / 2 - 25, 50);
+        g.fillRect(0, GameTimer.HEIGHT, game_board.getWidth(), game_board.getHeight());
         drawBoard(game_board, g);
     }
 
     public void drawBoard(GameBoard gameboard, Graphics g) {
         for (int i = 0; i < width; i++) {
             for (int k = 0; k < height; k++) {
-                Tiles tile = gameboard.getTiles(i,k);
+                Tiles tile = gameboard.getTiles(i, k);
 
                 int x = tile.getX();
                 int y = tile.getY();
 
-                int outlineX = x - tile_outline_thickness;
-                int outlineY = y - tile_outline_thickness;
-                int outLineWidth = Tiles.TILE_WIDTH + 2 * tile_outline_thickness;
-                int outLineHeight = Tiles.TILE_HEIGHT + 2 * tile_outline_thickness;
-                
+                int outlineX = x - Tiles.tile_outline_thickness;
+                int outlineY = y - Tiles.tile_outline_thickness;
+                int outLineWidth = Tiles.WIDTH + 2 * Tiles.tile_outline_thickness;
+                int outLineHeight = Tiles.HEIGHT + 2 * Tiles.tile_outline_thickness;
+
                 g.setColor(tile.isSelected());
                 g.fillRect(outlineX, outlineY, outLineWidth, outLineHeight);
-                
-                g.setColor(gameboard.getTiles(i,k).getColor());
-                g.fillRect(x, y, Tiles.TILE_WIDTH, Tiles.TILE_HEIGHT);
+
+                g.setColor(gameboard.getTiles(i, k).getColor());
+                g.fillRect(x, y, Tiles.WIDTH, Tiles.HEIGHT);
             }
         }
     }
 
     public void differentTiles(ArrayList<Tiles> tiles, Tiles tile) {
+        if (tile.getRemoved()) {
 
-        if (tiles.size() == 0 || tiles.get(0).getValue() == tile.getValue()) {
+        } else if (tiles.size() == 0 || tiles.get(0).getValue() == tile.getValue()) {
             if (!tiles.contains(tile)) {
                 tiles.add(tile);
             } else {
@@ -101,6 +134,20 @@ public class NumberGame extends JPanel implements MouseListener {
         Tiles tile = game_board.getTiles_OnCoord(x, y);
         if (tile != null) {
             differentTiles(selected_tiles, tile);
+            int numOfValues = game_board.getTileValues().get(tile.getValue());
+            if (numOfValues == selected_tiles.size() && !tile.getRemoved()) {
+                numOfValidTiles -= selected_tiles.size();
+                if (numOfValidTiles == 0) {
+                    f.dispose();
+                    timer.stop();
+                    new NumberGame(width + 1, height + 1, gameTime.getTime());
+                } else {
+                    for (int i = 0; i < selected_tiles.size(); i++) {
+                        selected_tiles.get(i).setRemoved();
+                    }
+                    selected_tiles.clear();
+                }
+            }
         }
         repaint();
     }

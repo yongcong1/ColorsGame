@@ -6,16 +6,18 @@ public class Tiles {
 
     //constants
     public static final int PADDING = 10;
-    public static final int TILE_WIDTH = 50;
-    public static final int TILE_HEIGHT = 50;
+    public static final int WIDTH = 50;
+    public static final int HEIGHT = 50;
+    public static final int tile_outline_thickness = 3;
     
     
     private int x, y, value;
-    private boolean selected = false;
+    private boolean selected;
+    private boolean removed;
     
     private static final Color[] colors = 
     {   //0
-        Color.gray, 
+        Color.black, 
         //1
         Color.blue, 
         Color.red, 
@@ -34,6 +36,8 @@ public class Tiles {
         this.x = x;
         this.y = y;
         this.value = value;
+        selected = false;
+        removed = false;
     }
 
     public int getX() {
@@ -53,15 +57,26 @@ public class Tiles {
     }
 
     public Color getColor() {
-        return colors[value];
+        if(removed)
+        return colors[0];
+        else
+            return colors[value];
     }
 
     public Color isSelected() {
-        if (!selected) {
-            return Color.white;
-        } else {
+        if (!selected || removed) {
             return Color.black;
+        } else {
+            return Color.white;
         }
+    }
+    
+    public boolean getRemoved(){
+        return removed;
+    }
+    
+    public void setRemoved(){
+        this.removed=true;
     }
 
     public boolean getSelected() {
